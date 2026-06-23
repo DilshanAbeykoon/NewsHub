@@ -1,21 +1,16 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import FeedClient from "@/components/FeedClient";
+import { getCachedArticles } from "@/lib/fetcher";
 import type { Article } from "@/lib/types";
 
 export const revalidate = 1800;
 
 async function getArticles(): Promise<{ articles: Article[]; fetchedAt: string } | null> {
   try {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL ??
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-
-    const res = await fetch(`${baseUrl}/api/feed`, {
-      next: { revalidate: 1800 },
-    });
-    if (!res.ok) return null;
-    return res.json();
+    const articles = await getCachedArticles();
+    if (!articles || articles.length === 0) return null;
+    return { articles, fetchedAt: new Date().toISOString() };
   } catch {
     return null;
   }
